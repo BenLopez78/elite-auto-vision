@@ -3,22 +3,20 @@ import io
 import zipfile
 from PIL import Image
 
+# --- CORRECTIF ANTI-BLOCAGE : Force l'IA à utiliser un seul thread ---
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
 # 1. Configuration de la page
 st.set_page_config(
-    page_title="Elite Auto Vision Studio", 
+    page_title="Elite Auto Vision Studio - Groupe Auto Leclair", 
     layout="wide"
 )
 
-# Fonction pour charger l'IA TURBO (Ultra-légère, rapide et économique en mémoire)
-@st.cache_resource
-def load_ai_model():
-    from rembg import new_session
-    # Utilisation du modèle "u2netp" : optimisé pour s'exécuter en quelques secondes
-    return new_session("u2netp")
-
 # Titre de l'application
 st.title("🚗 ELITE AUTO VISION - STUDIO")
-st.write("Interface d'automatisation ultra-rapide avec affichage du résultat en direct et suivi précis.")
+st.write("Interface d'automatisation optimisée (Correctif de performance mono-thread).")
 
 # 2. Zone de dépôt des fichiers
 col_f, col_v = st.columns(2)
@@ -37,68 +35,67 @@ if st.button("Lancer l'automatisation intelligente (Batch)", type="primary"):
         st.error("Veuillez fournir une image de fond (votre concession).")
     elif not car_uploads:
         st.error("Veuillez fournir au moins une image de véhicule.")
-    elif len(car_uploads) > 20:
-        st.error("Désolé, l'outil est limité à 20 images maximum.")
     else:
-        # Initialisation des éléments de progression demandés
-        status_text = st.empty()
+        # Création des indicateurs textuels et visuels demandés
+        status_tracker = st.empty()
         progress_bar = st.progress(0)
         
         try:
-            from rembg import remove
+            # Étape 1 : Importation des librairies lourdes
+            status_tracker.markdown("⏳ **Étape 1/4 :** Chargement des modules d'intelligence artificielle...")
+            from rembg import remove, new_session
             
-            # Récupération immédiate du modèle IA Turbo mis en cache
-            session = load_ai_model()
+            # Étape 2 : Initialisation sécurisée du modèle
+            status_tracker.markdown("⏳ **Étape 2/4 :** Initialisation du moteur de détourage (Modèle Turbo 4 Mo)...")
+            session = new_session("u2netp")
             
+            # Étape 3 : Traitement des fichiers
+            status_tracker.markdown("⏳ **Étape 3/4 :** Préparation des images en mémoire...")
             bg_img_raw = Image.open(bg_upload)
             bg_w, bg_h = bg_img_raw.size
             processed_images = {}
             total_files = len(car_uploads)
             
-            # Zone d'affichage dynamique pour le rendu visuel
-            st.write("### 🖼️ Aperçu en direct de la fusion :")
+            st.write("### 🖼️ Aperçu du catalogue généré :")
             preview_container = st.empty()
             
             for i, car_upload in enumerate(car_uploads):
-                # Calcul et affichage précis du pourcentage (%)
+                # Calcul et affichage en temps réel du pourcentage (%) demandé
                 percent_complete = int((i / total_files) * 100)
-                status_text.markdown(f"⏳ **Avancement : {percent_complete}%** — Traitement du véhicule {i+1} sur {total_files}...")
+                status_tracker.markdown(f"⚡ **Étape 4/4 : Traitement en cours ({percent_complete}%)** — Véhicule {i+1}/{total_files} ({car_upload.name})")
                 progress_bar.progress(i / total_files)
                 
                 car_img_raw = Image.open(car_upload).convert("RGBA")
                 
-                # Détourage ultra-rapide par l'IA (2 à 4 secondes)
+                # Détourage (Exécution rapide grâce au mode mono-thread)
                 car_cleaned_no_bg = remove(car_img_raw, session=session)
                 
-                # Composition sur le fond de la concession
+                # Fusion sur la concession
                 bg_copy = bg_img_raw.copy().convert("RGBA")
-                
                 ratio = car_cleaned_no_bg.height / car_cleaned_no_bg.width
-                new_width = int(bg_w * 0.65) # Taille proportionnelle de la voiture
+                new_width = int(bg_w * 0.65)
                 new_height = int(new_width * ratio)
                 car_resized = car_cleaned_no_bg.resize((new_width, new_height))
                 
-                # Ajustement de la position sur la zone asphaltée
                 pos_x = (bg_w - car_resized.width) // 2
                 pos_y = bg_h - car_resized.height - int(bg_h * 0.05)
                 
                 bg_copy.paste(car_resized, (pos_x, pos_y), car_resized)
                 final_img = bg_copy.convert("RGB")
                 
-                # Sauvegarde en mémoire
+                # Sauvegarde brute
                 img_byte_arr = io.BytesIO()
                 final_img.save(img_byte_arr, format='JPEG', quality=85)
                 processed_images[f"elite_auto_vision_{i+1}_{car_upload.name}"] = img_byte_arr.getvalue()
                 
-                # AFFICHAGE DU RÉSULTAT : Rend le travail visible à l'écran instantanément
-                preview_container.image(final_img, caption=f"Rendu final généré : {car_upload.name}")
-                
-            # Finalisation à 100%
-            status_text.markdown("🏆 **Avancement : 100% — Opération complétée avec succès !**")
-            progress_bar.progress(1.0)
-            st.success(f"Traitement terminé pour vos {total_files} photo(s).")
+                # Affichage immédiat à l'écran
+                preview_container.image(final_img, caption=f"Rendu final : {car_upload.name}")
             
-            # Archive ZIP pour téléchargement groupé
+            # Fin du processus
+            status_tracker.markdown("🏆 **Avancement : 100% — Traitement complété avec succès !**")
+            progress_bar.progress(1.0)
+            
+            # Création du ZIP
             zip_buffer = io.BytesIO()
             with zipfile.ZipFile(zip_buffer, "w") as zf:
                 for filename, img_data in processed_images.items():
@@ -112,4 +109,5 @@ if st.button("Lancer l'automatisation intelligente (Batch)", type="primary"):
             )
             
         except Exception as e:
-            st.error(f"Une erreur est survenue pendant l'exécution : {e}")
+            status_tracker.empty()
+            st.error(f"❌ Le processus a échoué. Erreur technique : {e}")
