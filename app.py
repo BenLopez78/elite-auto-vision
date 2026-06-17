@@ -6,12 +6,12 @@ from PIL import Image
 
 # 1. Configuration de la page
 st.set_page_config(
-    page_title="Elite Auto Vision Studio - Groupe Auto Leclair", 
+    page_title="Elite Auto Vision Studio", 
     layout="wide"
 )
 
-st.title("🚗 ELITE AUTO VISION - STUDIO (Version Allégée API)")
-st.write("Détourage IA instantané et intégration réaliste sur la devanture.")
+st.title("🚗 ELITE AUTO VISION - STUDIO")
+st.write("Génération de photos de véhicules avec intégration réaliste sur la devanture du concessionnaire.")
 
 # 2. Zone de configuration de la clé API
 st.sidebar.subheader("🔑 Configuration")
@@ -22,19 +22,19 @@ st.sidebar.markdown("[Obtenir une clé gratuite ici](https://www.remove.bg/fr/ap
 col_f, col_v = st.columns(2)
 
 with col_f:
-    st.subheader("1. Image de fond fixe (Concession)")
-    bg_upload = st.file_uploader("Déposez la photo de la concession", type=["jpg", "jpeg", "png"], key="bg")
+    st.subheader("1. Image de fond")
+    bg_upload = st.file_uploader("Déposez la photo de la devanture de la concession", type=["jpg", "jpeg", "png"], key="bg")
 
 with col_v:
-    st.subheader("2. Photos des véhicules sales (Max 2)")
-    car_uploads = st.file_uploader("Déposez les photos des voitures", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="cars")
+    st.subheader("2. Photos des véhicules")
+    car_uploads = st.file_uploader("Déposez les photos des véhicules (Max 2)", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="cars")
 
 # 4. Logique de traitement au clic
-if st.button("Lancer l'automatisation réaliste", type="primary"):
+if st.button("Lancer l'automatisation intelligente", type="primary"):
     if not api_key:
         st.error("Veuillez entrer votre clé API dans la barre latérale gauche pour activer le moteur.")
     elif not bg_upload:
-        st.error("Veuillez fournir une image de fond (votre concession).")
+        st.error("Veuillez fournir une image de fond (votre devanture de la concession).")
     elif not car_uploads:
         st.error("Veuillez fournir au moins une image de véhicule.")
     else:
