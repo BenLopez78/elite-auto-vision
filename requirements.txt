@@ -1,4 +1,3 @@
 streamlit
-rembg
 pillow
-numpy
+requests
