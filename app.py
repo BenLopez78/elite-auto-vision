@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🚗 ELITE AUTO VISION - STUDIO (Vitesse Cloud API)")
+st.title("🚗 ELITE AUTO VISION - STUDIO (Version Allégée API)")
 st.write("Détourage IA instantané et intégration réaliste sur la devanture.")
 
 # 2. Zone de configuration de la clé API
@@ -26,7 +26,7 @@ with col_f:
     bg_upload = st.file_uploader("Déposez la photo de la concession", type=["jpg", "jpeg", "png"], key="bg")
 
 with col_v:
-    st.subheader("2. Photos des véhicules sales")
+    st.subheader("2. Photos des véhicules sales (Max 2)")
     car_uploads = st.file_uploader("Déposez les photos des voitures", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="cars")
 
 # 4. Logique de traitement au clic
@@ -38,6 +38,11 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
     elif not car_uploads:
         st.error("Veuillez fournir au moins une image de véhicule.")
     else:
+        # --- SÉCURITÉ ANTI-BLOCAGE : Limitation stricte à 2 images ---
+        if len(car_uploads) > 2:
+            st.warning("⚠️ Mode gratuit activé : Seules les 2 premières images de votre liste seront traitées pour éviter le blocage du serveur.")
+            car_uploads = car_uploads[:2]
+            
         status_tracker = st.empty()
         progress_bar = st.progress(0)
         
@@ -47,7 +52,7 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
             processed_images = {}
             total_files = len(car_uploads)
             
-            st.write("### 🖼️ Aperçu du catalogue généré (Rendu réaliste) :")
+            st.write("### 🖼️ Aperçu du catalogue généré :")
             preview_container = st.empty()
             
             for i, car_upload in enumerate(car_uploads):
@@ -91,7 +96,7 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                     st.error(f"Erreur du serveur de détourage sur {car_upload.name} : {response.text}")
             
             # Fin du processus
-            status_tracker.markdown("🏆 **Avancement : 100% — Toutes les photos sont prêtes et stationnées !**")
+            status_tracker.markdown("🏆 **Avancement : 100% — Vos photos sont prêtes et stationnées !**")
             progress_bar.progress(1.0)
             
             # Création du ZIP
@@ -101,11 +106,11 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                     zf.writestr(filename, img_data)
                     
             st.download_button(
-                label="📦 Télécharger le catalogue finalisé (.ZIP)",
+                label="📦 Télécharger le catalogue (.ZIP)",
                 data=zip_buffer.getvalue(),
                 file_name="auto_leclair_catalogue.zip",
                 mime="application/zip",
-                help="Ce fichier contient les véhicules stationnés devant la concession."
+                help="Ce fichier contient vos véhicules stationnés devant la concession."
             )
             
         except Exception as e:
