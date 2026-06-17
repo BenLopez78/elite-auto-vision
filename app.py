@@ -109,8 +109,3 @@ if st.button("Lancer l'automatisation intelligente (Batch)", type="primary"):
             mime="application/zip",
             help="Ce fichier contient les 20 photos propres devant votre concession."
         )
-Plaintext
-streamlit
-rembg
-pillow
-numpy
