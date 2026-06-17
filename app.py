@@ -5,7 +5,7 @@ from PIL import Image
 
 # 1. Configuration de la page
 st.set_page_config(
-    page_title="Elite Auto Vision Studio - Groupe Auto Leclair", 
+    page_title="Elite Auto Vision Studio", 
     layout="wide"
 )
 
@@ -16,22 +16,22 @@ def load_ai_model():
     return new_session("u2net")
 
 # Titre de l'application
-st.title("🚗 ELITE AUTO VISION - STUDIO")
-st.write("Interface d'automatisation ultra-rapide : détourage IA et intégration sur la devanture de la concession.")
+st.title("ELITE AUTO VISION - STUDIO")
+st.write("Interface de génération de photos pour concessionnaires automobiles.")
 
 # 2. Zone de dépôt des fichiers
 col_f, col_v = st.columns(2)
 
 with col_f:
-    st.subheader("1. Image de fond fixe (Concession)")
+    st.subheader("1. Image de fond fixe (Devanture)")
     bg_upload = st.file_uploader("Déposez la photo de la concession", type=["jpg", "jpeg", "png"], key="bg")
 
 with col_v:
-    st.subheader("2. Photos des véhicules sales (Max 20)")
+    st.subheader("2. Photos des véhicules (Max 20)")
     car_uploads = st.file_uploader("Déposez les photos des voitures", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="cars")
 
 # 3. Logique de traitement au clic
-if st.button("Lancer l'automatisation intelligente (Batch)", type="primary"):
+if st.button("Lancer l'automatisation intelligente", type="primary"):
     if not bg_upload:
         st.error("Veuillez fournir une image de fond (votre concession).")
     elif not car_uploads:
