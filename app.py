@@ -10,8 +10,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🚗 ELITE AUTO VISION - STUDIO (Version API Turbo)")
-st.write("Interface ultra-rapide connectée au moteur de détourage cloud.")
+st.title("🚗 ELITE AUTO VISION - STUDIO (Vitesse Cloud API)")
+st.write("Détourage IA instantané et intégration réaliste sur la devanture.")
 
 # 2. Zone de configuration de la clé API
 st.sidebar.subheader("🔑 Configuration")
@@ -30,7 +30,7 @@ with col_v:
     car_uploads = st.file_uploader("Déposez les photos des voitures", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="cars")
 
 # 4. Logique de traitement au clic
-if st.button("Lancer l'automatisation (Vitesse Max)", type="primary"):
+if st.button("Lancer l'automatisation réaliste", type="primary"):
     if not api_key:
         st.error("Veuillez entrer votre clé API dans la barre latérale gauche pour activer le moteur.")
     elif not bg_upload:
@@ -47,12 +47,12 @@ if st.button("Lancer l'automatisation (Vitesse Max)", type="primary"):
             processed_images = {}
             total_files = len(car_uploads)
             
-            st.write("### 🖼️ Aperçu en direct :")
+            st.write("### 🖼️ Aperçu du catalogue généré (Rendu réaliste) :")
             preview_container = st.empty()
             
             for i, car_upload in enumerate(car_uploads):
                 percent_complete = int((i / total_files) * 100)
-                status_tracker.markdown(f"🚀 **Envoi au serveur de détourage ({percent_complete}%)** — Traitement du véhicule {i+1}/{total_files}...")
+                status_tracker.markdown(f"🚀 **Envoi au cloud ({percent_complete}%)** — Traitement du véhicule {i+1}/{total_files}...")
                 progress_bar.progress(i / total_files)
                 
                 # Appel de l'API externe (Prend 1 à 2 secondes)
@@ -64,18 +64,22 @@ if st.button("Lancer l'automatisation (Vitesse Max)", type="primary"):
                 )
                 
                 if response.status_code == 200:
-                    # Le détourage est réussi, on l'ouvre avec Pillow
+                    # Le détourage est réussi
                     car_cleaned_no_bg = Image.open(io.BytesIO(response.content))
                     
                     # Composition sur la concession
                     bg_copy = bg_img_raw.copy().convert("RGBA")
                     ratio = car_cleaned_no_bg.height / car_cleaned_no_bg.width
-                    new_width = int(bg_w * 0.65)
+                    new_width = int(bg_w * 0.65) # La voiture prendra 65% de la largeur du fond
                     new_height = int(new_width * ratio)
                     car_resized = car_cleaned_no_bg.resize((new_width, new_height))
                     
+                    # --- CORRECTION DE POSITIONNEMENT DEMANDÉE ---
+                    # 1. Centré horizontalement (X)
                     pos_x = (bg_w - car_resized.width) // 2
-                    pos_y = bg_h - car_resized.height - int(bg_h * 0.05)
+                    
+                    # 2. Calé en bas (Y) : On pose le bas de la voiture à 98% du bas (on laisse 2% pour l'asphalte du premier plan)
+                    pos_y = int(bg_h * 0.98) - car_resized.height
                     
                     bg_copy.paste(car_resized, (pos_x, pos_y), car_resized)
                     final_img = bg_copy.convert("RGB")
@@ -85,13 +89,13 @@ if st.button("Lancer l'automatisation (Vitesse Max)", type="primary"):
                     final_img.save(img_byte_arr, format='JPEG', quality=85)
                     processed_images[f"elite_auto_vision_{i+1}_{car_upload.name}"] = img_byte_arr.getvalue()
                     
-                    # Affichage immédiat du résultat
-                    preview_container.image(final_img, caption=f"Rendu final : {car_upload.name}")
+                    # Affichage immédiat du résultat corrigé
+                    preview_container.image(final_img, caption=f"Rendu final réaliste : {car_upload.name}")
                 else:
                     st.error(f"Erreur du serveur de détourage sur {car_upload.name} : {response.text}")
             
             # Fin du processus
-            status_tracker.markdown("🏆 **Avancement : 100% — Terminé !**")
+            status_tracker.markdown("🏆 **Avancement : 100% — Toutes les photos sont prêtes et stationnées !**")
             progress_bar.progress(1.0)
             
             # Création du ZIP
@@ -101,11 +105,12 @@ if st.button("Lancer l'automatisation (Vitesse Max)", type="primary"):
                     zf.writestr(filename, img_data)
                     
             st.download_button(
-                label="📦 Télécharger toutes les photos (.ZIP)",
+                label="📦 Télécharger le catalogue finalisé (.ZIP)",
                 data=zip_buffer.getvalue(),
                 file_name="auto_leclair_catalogue.zip",
                 mime="application/zip"
+                help="Ce fichier contient les 20 véhicules stationnés devant la concession de Saint-Jérôme."
             )
             
         except Exception as e:
-            st.error(f"❌ Une erreur est survenue : {e}")
+            st.error(f"❌ Une erreur est survenue pendant la création du rendu : {e}")
