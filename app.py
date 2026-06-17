@@ -55,7 +55,7 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                 status_tracker.markdown(f"🚀 **Envoi au cloud ({percent_complete}%)** — Traitement du véhicule {i+1}/{total_files}...")
                 progress_bar.progress(i / total_files)
                 
-                # Appel de l'API externe (Prend 1 à 2 secondes)
+                # Appel de l'API externe
                 response = requests.post(
                     'https://api.remove.bg/v1.0/removebg',
                     files={'image_file': car_upload.getvalue()},
@@ -64,21 +64,17 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                 )
                 
                 if response.status_code == 200:
-                    # Le détourage est réussi
                     car_cleaned_no_bg = Image.open(io.BytesIO(response.content))
                     
                     # Composition sur la concession
                     bg_copy = bg_img_raw.copy().convert("RGBA")
                     ratio = car_cleaned_no_bg.height / car_cleaned_no_bg.width
-                    new_width = int(bg_w * 0.65) # La voiture prendra 65% de la largeur du fond
+                    new_width = int(bg_w * 0.65)
                     new_height = int(new_width * ratio)
                     car_resized = car_cleaned_no_bg.resize((new_width, new_height))
                     
-                    # --- CORRECTION DE POSITIONNEMENT DEMANDÉE ---
-                    # 1. Centré horizontalement (X)
+                    # Positionnement au premier plan sur l'asphalte
                     pos_x = (bg_w - car_resized.width) // 2
-                    
-                    # 2. Calé en bas (Y) : On pose le bas de la voiture à 98% du bas (on laisse 2% pour l'asphalte du premier plan)
                     pos_y = int(bg_h * 0.98) - car_resized.height
                     
                     bg_copy.paste(car_resized, (pos_x, pos_y), car_resized)
@@ -89,7 +85,7 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                     final_img.save(img_byte_arr, format='JPEG', quality=85)
                     processed_images[f"elite_auto_vision_{i+1}_{car_upload.name}"] = img_byte_arr.getvalue()
                     
-                    # Affichage immédiat du résultat corrigé
+                    # Affichage immédiat du résultat
                     preview_container.image(final_img, caption=f"Rendu final réaliste : {car_upload.name}")
                 else:
                     st.error(f"Erreur du serveur de détourage sur {car_upload.name} : {response.text}")
@@ -108,8 +104,8 @@ if st.button("Lancer l'automatisation réaliste", type="primary"):
                 label="📦 Télécharger le catalogue finalisé (.ZIP)",
                 data=zip_buffer.getvalue(),
                 file_name="auto_leclair_catalogue.zip",
-                mime="application/zip"
-                help="Ce fichier contient les 20 véhicules stationnés devant la concession de Saint-Jérôme."
+                mime="application/zip",
+                help="Ce fichier contient les véhicules stationnés devant la concession."
             )
             
         except Exception as e:
